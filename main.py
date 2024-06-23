@@ -201,7 +201,7 @@ def main():
 
     # Browse for torrents
     amount = limit - unsat
-    print(f"Grabbing {amount} torrents with specified critera")
+    print(f"Grabbing {amount} torrents with specified criteria")
     ids = getTorrents(skip_ids, amount)
     
     # Download grabbed torrents
