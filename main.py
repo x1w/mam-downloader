@@ -73,23 +73,6 @@ def getSnatchListIds(user: dict, type: str = 'sSat') -> list:
 
     return results
 
-def checkValidSize(value: str, min: int, max: int) -> int:
-    units = {
-        "KiB": 1,
-        "MiB": 1024,
-        "GiB": 1024 ** 2,
-    }
-
-    # Split value into size and unit
-    size_str, unit = value.split()
-    size = float(size_str.replace(',', ''))
-
-    # Convert size to bytes
-    kib = int(size * units[unit])
-
-    # Check if correct size
-    return min <= kib <= max
-    
 def getTorrents(snatched: list = [], amount: int = 100):
     keepGoing = True
     iteration = 0 
@@ -119,14 +102,9 @@ def getTorrents(snatched: list = [], amount: int = 100):
         # Sort through data
         for torrent in cur['data']:
             id = str(torrent['id'])
-            size = torrent['size']
 
             # Check if snatched already
             if id in snatched or id in results:
-                continue
-
-            # Check if desired size
-            if config.CHECK_SIZE and not checkValidSize(size, config.MIN_SIZE, config.MAX_SIZE):
                 continue
 
             # Add if desired count hasn't been reached
@@ -197,7 +175,7 @@ def main():
             saveDataFile()
         skip_ids.extend(data[value])
     
-    skip_ids = list(set(skip_ids)) # Remove dupez
+    skip_ids = list(set(skip_ids))
 
     # Browse for torrents
     amount = limit - unsat
