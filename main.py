@@ -166,7 +166,7 @@ def main():
     # Check if we can get user details correctly
     user = getUserDetails()
     if not user:
-        print("Invalid session, set thisin config.py")
+        print("Invalid session, set this in config.py")
         return
         
     # Check if anything should be done 
