@@ -1,4 +1,5 @@
-MAM_ID = "" # Create session, https://www.myanonamouse.net/preferences/index.php?view=security
+from sys import platform
+MAM_ID = "" if platform == "linux" else "" # Create session, https://www.myanonamouse.net/preferences/index.php?view=security
 AUTO_EXTRACT_DIR = "" # Automatically extract the downloaded torrents to specified directory (leave blank to disable)
 SKIP = ['sSat', 'unsat'] # sSat, unsat, inactHnr, inactUnsat, upInact, inactSat, seedUnsat, seedHnr, leeching, upAct
 SEARCH = { # https://www.myanonamouse.net/api/endpoint.php/1/tor/js/loadSearchJSONbasic.php
