@@ -9,7 +9,7 @@ AUTO_EXTRACT_DIR = "/pool/share/torrents" if platform == "linux" else "" # Autom
 AUTO_DEL_BATCH = True # Automatically delete batches, after auto extracted
 AUTO_MILLIONARES_VAULT = True # Automatically purchase millionare's vault if available
 AUTO_SPEND_POINTS = True # Automatically spend remaining bonus points on upload
-AUTO_STATS_SEND_INTERVAL =  3600 # Automatically show download, upload, ratio, etc on interval
+AUTO_STATS_INTERVAL =  3600 # Automatically show download, upload, ratio, etc on interval
 SKIP = ['sSat', 'unsat'] # sSat, unsat, inactHnr, inactUnsat, upInact, inactSat, seedUnsat, seedHnr, leeching, upAct
 SEARCH = { # https://www.myanonamouse.net/api/endpoint.php/1/tor/js/loadSearchJSONbasic.php
     "tor": {

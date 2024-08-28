@@ -159,7 +159,8 @@ def sendWebhook(content: str):
     
     webhook = SyncWebhook.from_url(config.DISCORD_WEBHOOK)
     webhook.send(embed=Embed(
-        description=f"```{content}```"
+        description=f"```{content}```",
+        color=2829617
     ))
 
 def main():
@@ -180,11 +181,11 @@ def main():
         saveDataFile()
 
     # Send a webhook containing stats
-    if config.AUTO_SPEND_POINTS:
+    if config.AUTO_STATS_INTERVAL:
         elapsed = time.time() - data["statsLastSend"]
-        if elapsed > config.AUTO_SPEND_POINTS:
+        if elapsed > config.AUTO_STATS_INTERVAL:
             ratio = user["uploaded_bytes"]/user["downloaded_bytes"]
-            sendWebhook(f"U: {user["uploaded"]} D: {user["downloaded"]} Ratio: {ratio:.2f}")
+            sendWebhook("Uploaded: {}\nDownloaded: {}\nRatio: {:.2f}".format(user["uploaded"], user["downloaded"], ratio))
             data["statsLastSend"] = time.time()
             saveDataFile()
 
@@ -208,10 +209,8 @@ def main():
         ).json()
 
         # Extract results and send to webhook
-        if not r["success"]:
-            sendWebhook(r["error"])
-        else:
-            sendWebhook(f"{r["amount"]} GB upload purchased")
+        if r["success"]:
+            sendWebhook("{} GB upload purchased".format(r["amount"]))
 
     # Skip if no more torrents should be added
     if unsat >= limit:
