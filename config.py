@@ -1,6 +1,15 @@
+import os
 from sys import platform
-MAM_ID = "" # Create session, https://www.myanonamouse.net/preferences/index.php?view=security
-AUTO_EXTRACT_DIR = "" if platform == "linux" else "" # Automatically extract the downloaded torrents to specified directory (leave blank to disable)
+from dotenv import load_dotenv
+load_dotenv()
+
+MAM_ID = os.getenv("MAM_ID") # Create session, https://www.myanonamouse.net/preferences/index.php?view=security
+DISCORD_WEBHOOK = os.getenv("DISCORD_WEBHOOK") # Will send information about script run if set
+AUTO_EXTRACT_DIR = "/pool/share/torrents" if platform == "linux" else "" # Automatically extract the downloaded torrents to specified directory (leave blank to disable)
+AUTO_DEL_BATCH = True # Automatically delete batches, after auto extracted
+AUTO_MILLIONARES_VAULT = True # Automatically purchase millionare's vault if available
+AUTO_SPEND_POINTS = True # Automatically spend remaining bonus points on upload
+AUTO_STATS_SEND_INTERVAL =  3600 # Automatically show download, upload, ratio, etc on interval
 SKIP = ['sSat', 'unsat'] # sSat, unsat, inactHnr, inactUnsat, upInact, inactSat, seedUnsat, seedHnr, leeching, upAct
 SEARCH = { # https://www.myanonamouse.net/api/endpoint.php/1/tor/js/loadSearchJSONbasic.php
     "tor": {

@@ -4,13 +4,19 @@ import json
 import os
 import time
 import zipfile
+from discord import SyncWebhook, Embed
 
 session = requests.Session()
 headers = {}
 freshLoad = True
 base_url = "https://www.myanonamouse.net"
-storage_path = "data.json"
+data_dir = "storage"
+storage_path = "storage/data.json"
 data = {}
+
+# Create data dir
+if not os.path.exists(data_dir):
+    os.mkdir(data_dir)
 
 # Load previously saved data
 if os.path.exists(storage_path):
@@ -37,7 +43,6 @@ def getUserDetails() -> dict:
 
     return response.json()
 
-# kinda wonky, quickly redid this
 def getSnatchListIds(user: dict, type: str = 'sSat') -> list:
     results = []
     iteration = 0
@@ -119,7 +124,7 @@ def getTorrents(snatched: list = [], amount: int = 100):
 
     return results
 
-def downloadBatch(ids: list, dir: str = "downloads"):
+def downloadBatch(ids: list):
     # Download in batches, the site only allows 100 at a time
     for i in range(0, len(ids), 100):
         batch = ids[i:i + 100]
@@ -131,12 +136,8 @@ def downloadBatch(ids: list, dir: str = "downloads"):
             timeout=30
         )
 
-        # Create downloads dir
-        if not os.path.exists(dir):
-            os.mkdir(dir)
-
         # Write result to zip file
-        path = os.path.join(dir, f"batch_{time.time()}.zip")
+        path = os.path.join(data_dir, f"batch_{time.time()}.zip")
         with open(path, 'wb') as f:
             f.write(response.content) 
 
@@ -145,19 +146,72 @@ def downloadBatch(ids: list, dir: str = "downloads"):
             print(f"Extracting {path} to {config.AUTO_EXTRACT_DIR}")
             with zipfile.ZipFile(path, 'r') as f:
                 f.extractall(config.AUTO_EXTRACT_DIR)
+            if config.AUTO_DEL_BATCH:
+                os.remove(path)
 
         time.sleep(5)
+
+def sendWebhook(content: str):
+    url = config.DISCORD_WEBHOOK
+    # Skip if no url set in configuration
+    if not url:
+        return
+    
+    webhook = SyncWebhook.from_url(config.DISCORD_WEBHOOK)
+    webhook.send(embed=Embed(
+        description=f"```{content}```"
+    ))
 
 def main():
     # Check if we can get user details correctly
     user = getUserDetails()
     if not user:
-        print("Invalid MaM token, fix this and try again")
+        print("Invalid session, set thisin config.py")
         return
         
     # Check if anything should be done 
     unsat = user['unsat']['count'] 
     limit = user['unsat']['limit']
+
+    # Create data file with base data if doesn't exist
+    if not data:
+        data["lastDonate"] = 0
+        data["statsLastSend"] = 0
+        saveDataFile()
+
+    # Send a webhook containing stats
+    if config.AUTO_SPEND_POINTS:
+        elapsed = time.time() - data["statsLastSend"]
+        if elapsed > config.AUTO_SPEND_POINTS:
+            ratio = user["uploaded_bytes"]/user["downloaded_bytes"]
+            sendWebhook(f"U: {user["uploaded"]} D: {user["downloaded"]} Ratio: {ratio:.2f}")
+            data["statsLastSend"] = time.time()
+            saveDataFile()
+
+    # Purchase millionare's vault if available @untested
+    if config.AUTO_MILLIONARES_VAULT:
+        elapsed = time.time() - data["lastDonate"]
+        # Proceed if first run or if 24 hours have passed
+        if elapsed > 86400: # 60 * 60 * 24
+            response = session.get(
+                f"{base_url}/json/bonusBuy.php/millionaires/donate.php?", 
+                headers=headers
+            )
+            data["lastDonate"] = time.time()
+        saveDataFile()
+
+    # Spend free bonus points
+    if config.AUTO_SPEND_POINTS:
+        r = session.get(
+            f"{base_url}/json/bonusBuy.php/?spendtype=upload&amount=Max Affordable ", 
+            headers=headers
+        ).json()
+
+        # Extract results and send to webhook
+        if not r["success"]:
+            sendWebhook(r["error"])
+        else:
+            sendWebhook(f"{r["amount"]} GB upload purchased")
 
     # Skip if no more torrents should be added
     if unsat >= limit:
