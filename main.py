@@ -189,20 +189,6 @@ def main():
             data["statsLastSend"] = time.time()
             saveDataFile()
 
-    # Purchase millionare's vault if available @untested
-    if config.AUTO_MILLIONARES_VAULT:
-        elapsed = time.time() - data["lastDonate"]
-        # Proceed if first run or if 24 hours have passed
-        if elapsed > 86400: # 60 * 60 * 24
-            response = session.post(
-                f"{base_url}/millionaires/donate.php", 
-                headers=headers,
-                data={"Donation": "1800"}
-            )
-            print(response.text)
-            data["lastDonate"] = time.time()
-        saveDataFile()
-
     # Spend free bonus points
     if config.AUTO_SPEND_POINTS:
         r = session.get(
