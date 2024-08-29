@@ -194,10 +194,12 @@ def main():
         elapsed = time.time() - data["lastDonate"]
         # Proceed if first run or if 24 hours have passed
         if elapsed > 86400: # 60 * 60 * 24
-            response = session.get(
-                f"{base_url}/json/bonusBuy.php/millionaires/donate.php?", 
-                headers=headers
+            response = session.post(
+                f"{base_url}/millionaires/donate.php", 
+                headers=headers,
+                data={"Donation": "1800"}
             )
+            print(response.text)
             data["lastDonate"] = time.time()
         saveDataFile()
 
