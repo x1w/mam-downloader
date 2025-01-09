@@ -2,6 +2,7 @@ import requests
 import config
 import json
 import os
+import math
 import time
 import zipfile
 from discord import SyncWebhook, Embed
@@ -55,6 +56,7 @@ def getSnatchListIds(user: dict, type: str = 'sSat') -> list:
             f"{base_url}/json/loadUserDetailsTorrents.php?uid={user['uid']}&type={type}&iteration={str(iteration)}",
             headers=headers
         )
+        unix = time.time()
 
         cur = response.json()
         # No results remaining, or unsat (returns all at once) - not sure if this is the case for users with 200 limit?
@@ -151,23 +153,33 @@ def downloadBatch(ids: list):
 
         time.sleep(5)
 
-def sendWebhook(content: str):
+def sendWebhook(content: str = None, fields: dict = None):
     url = config.DISCORD_WEBHOOK
     # Skip if no url set in configuration
     if not url:
         return
     
+    # Webhook
     webhook = SyncWebhook.from_url(config.DISCORD_WEBHOOK)
-    webhook.send(embed=Embed(
-        description=f"```{content}```",
-        color=2829617
-    ))
+    embed = Embed(
+        color=14858496,
+        description=content,
+    )
+    embed.set_author(name="MyAnonaMouse Helper")
+    embed.set_thumbnail(url="https://i.imgur.com/unDUs13.png")
+
+    # Dynamically add fields
+    if fields:
+        for name, value in fields.items():
+            embed.add_field(name=name, value=value, inline=True)
+
+    webhook.send(embed=embed)
 
 def main():
     # Check if we can get user details correctly
     user = getUserDetails()
     if not user:
-        print("Invalid session, set this in config.py")
+        print("Invalid MyAnonaMouse session ID provided, set this value in config.py")
         return
         
     # Check if anything should be done 
@@ -181,11 +193,20 @@ def main():
         saveDataFile()
 
     # Send a webhook containing stats
-    if config.AUTO_STATS_INTERVAL:
+    if config.STATS_NOTIFICATION_INTERVAL:
         elapsed = time.time() - data["statsLastSend"]
-        if elapsed > config.AUTO_STATS_INTERVAL:
-            ratio = user["uploaded_bytes"]/user["downloaded_bytes"]
-            sendWebhook("Uploaded: {}\nDownloaded: {}\nRatio: {:.2f}".format(user["uploaded"], user["downloaded"], ratio))
+        if elapsed > config.STATS_NOTIFICATION_INTERVAL:
+            # Calculate their ratio
+            uploaded = user["uploaded_bytes"]
+            downloaded =  user["downloaded_bytes"]
+            ratio =  math.inf if downloaded == 0 else uploaded / downloaded
+
+            sendWebhook(fields={
+                "Uploaded": user['uploaded'],
+                "Downloaded": user['downloaded'],
+                "Ratio": f"{ratio:.2f}"
+            })
+
             data["statsLastSend"] = time.time()
             saveDataFile()
 
@@ -198,11 +219,11 @@ def main():
 
         # Extract results and send to webhook
         if r["success"]:
-            sendWebhook("{} GB upload purchased".format(r["amount"]))
+            sendWebhook(content="{} GB upload credit purchased.".format(r["amount"]))
 
     # Skip if no more torrents should be added
     if unsat >= limit:
-        print(f"Unsaturated limit reached")
+        print(f"You've reached your unsaturated torrent limit, not continuing.")
         return
     
     # Create a list which we can check ids against to avoid duplicates
