@@ -9,7 +9,7 @@ STATS_NOTIFICATION_INTERVAL = 60 * 60 # Time in seconds the script should wait u
 # Automations
 AUTO_EXTRACT_DIR = "" # Automatically extract the downloaded torrents to specified directory (leave blank to disable)
 AUTO_DEL_BATCH = True # Automatically delete batch archive files once automatically extracted
-AUTO_SPEND_POINTS = True # Automatically spend remaining bonus points on upload
+AUTO_SPEND_POINTS = False # Automatically spend remaining bonus points on upload
 
 # Torrent search criteria
 # More information: https://www.myanonamouse.net/api/endpoint.php/1/tor/js/loadSearchJSONbasic.php
